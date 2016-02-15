@@ -1,0 +1,27 @@
+internalName: __COLLECTION___keyboard
+
+locales:
+  en:
+    name: &bundleName "__COLLECTION__ Keyboards"
+    description: "Mobile OS keyboards for __COLLECTION__ languages from the Divvun group at UiT."
+  nb:
+    name: "__COLLECTION__ tastatur"
+    description: "Mobiltastatur for __COLLECTION__ fra Divvun-gruppa."
+
+author: The Divvun Group, UiT Norgga árktalaš universitehta
+email: feedback@divvun.no
+
+layouts: [__UND__]
+
+version: 1.0
+build: 1
+
+targets:
+  android:
+    packageId: no.uit.giella.keyboards.__COLLECTION__
+    keyStore: /Users/brendan/git/softkbdgen/test.keystore
+    keyAlias: sami_keyboard
+
+  ios:
+    packageId: no.uit.giella.keyboards.__COLLECTION__
+    bundleName: *bundleName
