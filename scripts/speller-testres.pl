@@ -12,7 +12,7 @@
 #
 # Usage: speller-testres.pl -h
 #
-# $Id: speller-testres.pl 128658 2016-01-25 13:13:10Z boerre $
+# $Id: speller-testres.pl 120392 2015-09-07 08:24:11Z sjur $
 
 use warnings;
 use utf8; # The perl script itself is UTF-8, and this pragma will make perl obey
@@ -121,12 +121,8 @@ if ( $engine eq "mw") {
 } elsif ( $engine eq "hf") {
     $input_type="hf";
     read_hfst();
-} elsif ( $engine eq "to") {
-    $input_type="to";
-    read_hfst_tino();
 } else {
-    print STDERR
-        "$0: Specify the speller engine: --engine=[pl|pk|mw|hu|fo|hf|to|vk]\n";
+    print STDERR "$0: Specify the speller engine: --engine=[pl|pk|mw|hu|fo|hf|vk]\n";
     exit;
 }
 
@@ -158,15 +154,15 @@ if ($print_xml) {
 sub convert_systime {
     my %time_hash = ('realtime', '0', 'usertime', '0', 'systime', '0');
 
-    my @timelines = split(/\n/, $timeuse);
-    for my $timeline (@timelines) {
-        chomp $timeline;
-        if ($timeline =~ /^real/) {
-            $time_hash{'realtime'} = convert_systime_to_seconds($timeline);
-        } elsif ($timeline =~ /^user/) {
-            $time_hash{'usertime'} = convert_systime_to_seconds($timeline);
-        } elsif ($timeline =~ /^sys/) {
-            $time_hash{'systime'} = convert_systime_to_seconds($timeline);
+    open my $input, '<', $timeuse;
+    while (<$input>) {
+        chomp;
+        if (/^real/) {
+            $time_hash{'realtime'} = convert_systime_to_seconds($_);
+        } elsif (/^user/) {
+            $time_hash{'usertime'} = convert_systime_to_seconds($_);
+        } elsif (/^sys/) {
+            $time_hash{'systime'} = convert_systime_to_seconds($_);
         }
     }
 
@@ -238,130 +234,101 @@ sub read_applescript {
     close(FH);
 }
 
-=pod
-
-=begin html
-
-<p>Every input line to hunspell produces one or more lines of output
-containing status and results produced by hunspell ended by an empty line.</p>
-
-<p>Exceptions to this rule are:</p>
-
-<ul>
-    <li>input lines starting with - or + produce no output</li>
-    <li>mail and web adresses produce only an empty line</li>
-</ul>
-
-<p>The speller output file is read into an array, @outlines</p>
-
-<p>To keep input and output in sync, for each input, check the input word</p>
-
-<ul>
-    <li>if input starts with -, go the next input, ignore output line</li>
-    <li>if input is a mail or webadress, go to the next input and output line</li>
-    <li>on other input</li>
-    <ul>
-        <li>read output lines until an empty line is hit</li>
-        <ul>
-            <li>if there is one output line, set the data</li>
-            <li>if there are more output lines, look for an error flag,
-            ignore suggestions, as this will not make sense</li>
-        </ul>
-    </ul>
-</ul>
-
-=end html
-
-=cut
-
 sub read_hunspell {
+
     print STDERR "Reading Hunspell output from $output\n";
-    open(FH, '<', $output);
-    my @lines = <FH>;
-    my $outlines = scalar(@lines);
+    open(FH, $output);
 
-    # Start indexing output at the second line, because the first
-    # line is only a message from hunspell that it is alive
-    my $out_i = 1;
-
-    my $origsize = scalar(@originals);
-    # Input is indexed from the first item
-    my $orig_i = 0;
-
-    while ($orig_i < $origsize) {
-        if ($originals[$orig_i]{'orig'} =~ /^[-+]/) {
-            $originals[$orig_i]{'error'} = "SplCor";
-        } elsif ($originals[$orig_i]{'orig'} =~ /@|^http:\/\//) {
-            $originals[$orig_i]{'error'} = "SplCor";
-            # compensate for the empty line produced in the output
-            $out_i++;
-        } else {
-            my @errorlines;
-            while ($out_i < $outlines && $lines[$out_i] !~ /^$/) {
-                push(@errorlines, $lines[$out_i]);
-                $out_i++;
+    my $i=0;
+    my @suggestions;
+    my $error;
+    #my @numbers;
+    my @tokens;
+    while (<FH>) {
+        chomp;
+        # An empty line marks the beginning of next input
+        if (/^\s*$/) {
+            if ($originals[$i] && ! $originals[$i]{'error'}) {
+                $originals[$i]{'error'} = "TokErr";
+                $originals[$i]{'tokens'} =  [ @tokens ];
             }
-
-            my $lines_len = scalar(@errorlines);
-            if ($lines_len == 1) {
-                handle_hunspell_line($errorlines[0], $orig_i);
-            } elsif ($lines_len > 1) {
-                $originals[$orig_i]{'error'} = handle_hunspell_lines(\@errorlines);
-            } else {
-                die "orig: $originals[$orig_i]{'orig'} no: $orig_i spoutline: $out_i whoops, out of sync!\n";
-            }
-
-            # compensate for the empty line
-            $out_i++;
+            @tokens = undef;
+            pop @tokens;
+            $i++;
+            next;
         }
-        # ready for the next input
-        $orig_i++;
-    }
-}
-
-sub handle_hunspell_line {
-    my ($errorline, $orig_i) = @_;
-
-    chomp $errorline;
-    my ($flag, $rest) = split(/ /, $errorline, 2);
-
-    if ($flag eq '*') {
-        $originals[$orig_i]{'error'} = 'SplCor';
-    } elsif ($flag eq '+') {
-        $originals[$orig_i]{'error'} = 'SplCor';
-    } elsif ($flag eq '-') {
-        $originals[$orig_i]{'error'} = 'SplCor';
-    } elsif ($flag eq '#') {
-        $originals[$orig_i]{'error'} = 'SplErr';
-    } elsif ($flag eq '&') {
-        $originals[$orig_i]{'error'} = 'SplErr';
-        my @parts = split(/ /, $rest, 4);
-
-        if (! $parts[0] eq $originals[$orig_i]{'orig'}) {
-            die "$parts[0], $originals[$orig_i]{'orig'}\n";
-        }
-
-        my @sugglist = split(/\, /, $parts[3]);
-        $originals[$orig_i]{'sugg'} = [ @sugglist ];
-        $originals[$orig_i]{'suggnr'} = scalar(@sugglist);
-    }
-}
-
-sub handle_hunspell_lines {
-    my ($errorlines_ref) = @_;
-
-    my $errors = "#&";
-    my $error = 'SplCor';
-    for my $errorline (@{$errorlines_ref}) {
-        chomp $errorline;
-        my @parts = split(/ /, $errorline, 2);
-        if (index($errors, $parts[0]) != -1) {
-            $error = 'SplErr';
+        if (! $originals[$i]) {
+            cluck "Warning: the number of output words did not match the input\n";
+            cluck "Skipping part of the output..\n";
             last;
         }
-    }
+        # Typical input:
+        # & Eskil 4 0: Esski, Eskaleri, Skilla, Eskaperi
+        # & = misspelling with suggestions
+        # Eskil = original input
+        # 4 = number of suggestions
+        # 0: offset in input line of orig word
+        # The rest is the comma-separated list of suggestion
+        my $root;
+        my $suggnr;
+        my $compound;
+        my $orig;
+        my $offset;
+        my ($flag, $rest) = split(/ /, $_, 2);
 
-    return $error;
+        # Error symbol conversion:
+        if ($flag eq '*') {
+            $error = 'SplCor' ;
+        } elsif ($flag eq '+') {
+            $error = 'SplCor' ;
+            $root = $rest;
+        } elsif ($flag eq '-') {
+            $error = 'SplCor' ;
+            $compound =1;
+        } elsif ($flag eq '#') {
+            $error = 'SplErr' ;
+            ($orig, $offset) = split(/ /, $rest, 2);
+        } elsif ($flag eq '&') {
+            $error = 'SplErr' ;
+            my $sugglist;
+            ($orig, $suggnr, $offset, $sugglist) = split(/ /, $rest, 4);
+            @suggestions = split(/\, /, $sugglist);
+        }
+
+        # Debug prints
+        #print "Flag: $flag\n";
+        #print "ERROR: $error\n";
+        #if ($orig) { print "Orig: $orig\n"; }
+        #if (@suggestions) { print "Suggs: @suggestions\n"; }
+
+        # remove extra space from original
+        if ($orig) {
+            $orig =~ s/^\s*(.*?)\s*$/$1/;
+        }
+        if ($offset) {
+            $offset =~ s/\://;
+        }
+
+        if ($error && $error eq "SplCor") {
+            $originals[$i]{'error'} = $error;
+        } elsif ($orig && $originals[$i] && $originals[$i]{'orig'} ne $orig) {
+            # Some simple adjustments to the input and output lists.
+            # First search the output word in the input list.
+            push (@tokens, $orig);
+        } elsif ($originals[$i] && (! $orig || $originals[$i]{'orig'} eq $orig)) {
+            if ($error) {
+                $originals[$i]{'error'} = $error;
+            } else {
+                $originals[$i]{'error'} = "not_known";
+            }
+            $originals[$i]{'sugg'} = [ @suggestions ];
+            if ($suggnr) {
+                $originals[$i]{'suggnr'} = $suggnr;
+            }
+            #$originals[$i]{'num'} = [ @numbers ];
+        }
+    }
+    close(FH);
 }
 
 sub read_puki {
@@ -419,7 +386,7 @@ sub read_puki {
 #        if (@numbers) { print "Nums: @numbers\n"; }
 
         # remove extra space from original
-        if (length($orig) > 0) {
+        if ($orig) {
             $orig =~ s/^\s*(.*?)\s*$/$1/;
         }
 
@@ -573,7 +540,7 @@ sub read_polderland {
             }
         }
         close(FH);
-        if (length($orig) > 0) {
+        if ($orig) {
             #Store the suggestions from the last round.
             if (@suggestions) {
                 $originals[$i]{'sugg'} = [ @suggestions ];
@@ -651,13 +618,6 @@ sub read_voikko {
             }
         }
     }
-    if (@suggestions) {
-        if (! $orig eq $originals[$index]{'orig'}) {
-            die "\nThese suggestions do not seem to belong here\nCurrent orig: $orig:\nIndex: $index\nOriginal word at this index: $originals[$index]{'orig'}\nSuggestions: @suggestions\n\n";
-        }
-        $originals[$index]{'sugg'} = [ @suggestions ];
-        @suggestions = ();
-    }
     close(FH);
 }
 
@@ -732,7 +692,7 @@ sub read_hfst {
 #        if (@numbers) { print "Nums: @numbers\n"; }
 
         # remove extra space from original
-        if (length($orig) > 0) {
+        if ($orig) {
             $orig =~ s/^\s*(.*?)\s*$/$1/;
         }
 
@@ -777,48 +737,6 @@ sub read_hfst {
     $/ = $eol; # restore default value of record separator
 }
 
-# This function reads the hfst-ospell-office tool output, which is quite
-# different from the data from hfst-ospell.
-sub read_hfst_tino {
-
-    print STDERR "Reading hfst-ospell-office data from $output\n";
-    open(FH, $output);
-
-    my $i=0;
-    my @suggestions;
-    my $error;
-    #my @numbers;
-    my @tokens;
-    while (<FH>) {
-        chomp;
-        if (! /@@/) {
-            my ($flag, $sugglist) = split(/\t/, $_, 2);
-
-            if ($flag eq '*') {
-                $originals[$i]{'error'} = 'SplCor';
-            } elsif ($flag eq '#') {
-                $originals[$i]{'error'} = 'SplErr';
-                if (length($sugglist)) {
-                    $originals[$i]{'sugg'} = [ split(/\t/, $sugglist) ];
-                }
-            } elsif ($flag eq '&') {
-                $originals[$i]{'error'} = 'SplErr' ;
-                $originals[$i]{'sugg'} = [ split(/\t/, $sugglist) ];
-            } elsif ($flag eq '!') {
-                print STDERR "empty line fed to speller: «" . $_ . "»\n";
-            } else {
-                print STDERR __LINE__ . " unknown input\n";
-                print STDERR $_;
-                print STDERR "\nstopping\n";
-                exit(18);
-            }
-
-            $i++;
-        }
-    }
-    close(FH);
-}
-
 # This function reads the correct data to evaluate the performance of the speller
 # The data is structured as in the typos file, hence the name.
 sub read_typos {
@@ -827,13 +745,16 @@ sub read_typos {
     open(FH, "<$input") or die "Could not open $input";
 
     while (<FH>) {
+        chomp;
+        next if (/^[\#\!]/);
+        next if (/^\s*$/);
 #        s/[\#\!].*$//; # not applicable anymore - we want to preserve comments
         my ($testpair, $comment) = split(/[\#\!]\s*/);
         my ($orig, $expected) = split(/\t+/,$testpair);
 #        print STDERR "Original: $orig\n";
 #        print STDERR "Expected: $expected\n" if $expected;
 #        print STDERR "Comment:  $comment\n" if $comment;
-        if (length($orig) > 0) {
+        if ( $orig ) {
             my $rec = {};
             $orig =~ s/\s*$//;
             $rec->{'orig'} = $orig;
@@ -882,9 +803,7 @@ sub print_xml_output {
 
     my $doc = XML::LibXML::Document->new('1.0', 'utf-8');
 
-    my $pi = $doc->createProcessingInstruction("xml-stylesheet");
-    $pi->setData(href=>'https://gtsvn.uit.no/langtech/trunk/gtcore/scripts/style/speller_xml.css', type=>'text/css');
-    $doc->appendChild( $pi );
+
 
     my $spelltestresult = $doc->createElement('spelltestresult');
     my $results = make_results(\@originals, $doc);
@@ -903,7 +822,7 @@ sub make_original {
     # doc is a XML::LibXML::Document
     my ($rec, $word, $doc) = @_;
 
-    if (length($rec->{'orig'})) {
+    if ($rec->{'orig'}) {
         my $original = $doc->createElement('original');
         $original->appendTextNode($rec->{'orig'});
 
@@ -1135,9 +1054,7 @@ sub set_corrsugg_attribute {
     # corrsugg=6: correct suggestion found below the 5th suggestion
     # corrsugg=0: no suggestions
     # corrsugg=-1: no correct suggestions
-    # corrsugg=goodaccept: the word is correctly accepted by the speller
-    # corrsugg=badaccept:  the word is accepted by the speller, but is misspelled
-    # corrsugg=falsealarm: the word is flagged by the speller, but should not
+    # corrsugg=accept: the word is accepted by the speller
     my ($word) = @_;
 
     if ($word->find('./position')) {
@@ -1146,19 +1063,12 @@ sub set_corrsugg_attribute {
         } else {
             $word->setAttribute('corrsugg' => '6');
         }
-    } elsif ($word->find('./speller[@status="error"]') &&
-            $word->find('./original[@status="correct"]')) {
-        $word->setAttribute('corrsugg' => 'falsealarm');
-    } elsif ($word->find('./speller[@status="correct"]') &&
-            $word->find('./original[@status="error"]')) {
-        $word->setAttribute('corrsugg' => 'badaccept');
     } elsif (! $word->find('./suggestions') && $word->find('./expected')) {
         $word->setAttribute('corrsugg' => '0');
     } elsif (! $word->find('./position') && $word->find('./suggestions')) {
         $word->setAttribute('corrsugg' => '-1');
-    } elsif ($word->find('./speller[@status="correct"]') &&
-            $word->find('./original[@status="correct"]')) {
-        $word->setAttribute('corrsugg' => 'goodaccept');
+    } elsif ($word->find('./speller[@status="correct"]')) {
+        $word->setAttribute('corrsugg' => 'accept');
     }
 }
 
@@ -1348,10 +1258,13 @@ sub make_truefalsesummary {
     my $precision = $doc->createElement('precision');
     my $recall = $doc->createElement('recall');
 
-    $precision->appendTextNode(sprintf("%.2f", get_true_positive($results) / (get_true_positive($results) + get_false_positive($results))));
-    $truefalsesummary->appendChild($precision);
-    $recall->appendTextNode(sprintf("%.2f", get_true_positive($results) / (get_true_positive($results) + get_false_negative($results))));
-    $truefalsesummary->appendChild($recall);
+    my $positives = (get_true_positive($results) + get_false_positive($results));
+    if ($positives > 0) {
+        $precision->appendTextNode(sprintf("%.2f", get_true_positive($results)/$positives));
+        $truefalsesummary->appendChild($precision);
+        $recall->appendTextNode(sprintf("%.2f", get_true_positive($results) / $positives));
+        $truefalsesummary->appendChild($recall);
+    }
 
 
     my $accuracy = $doc->createElement('accuracy');
@@ -1400,9 +1313,7 @@ sub make_allpos_percent {
 
     my $allpos_percent = $doc->createElement('allpos_percent');
 
-    my $spellererror = $results->findnodes('.//word[speller[@status = "error"]
-                                               and original[@status = "error"]]
-                                           ')->size;
+    my $spellererror = $results->findnodes('.//word[speller[@status = "error"]]')->size;
     my $positions = $results->findnodes('.//position')->size;
 
     if ($spellererror) {
@@ -1417,9 +1328,7 @@ sub make_top5pos_percent {
 
     my $top5pos_percent = $doc->createElement('top5pos_percent');
 
-    my $spellererror = $results->findnodes('.//word[speller[@status = "error"]
-                                               and original[@status = "error"]]
-                                           ')->size;
+    my $spellererror = $results->findnodes('.//word[speller[@status = "error"]]')->size;
     my $positions = $results->findnodes('.//position[text() < 6]')->size;
 
     if ($spellererror > 0) {
@@ -1543,7 +1452,7 @@ sub print_output {
 
     for my $rec (@originals) {
         my @suggestions;
-        if (length($rec->{'orig'})) {
+        if ($rec->{'orig'}) {
             print "Orig: $rec->{'orig'} | ";
         }
         if ($rec->{'expected'}) {
@@ -1587,7 +1496,7 @@ Usage: speller-testres.pl [OPTIONS]
 --document=<name> The name of the original speller input, if not the input file name.
 -d <name>
 
---engine=[pl|pk|mw|hu|fo|hf|to|vk]
+--engine=[pl|pk|mw|hu|fo|hf|vk]
                   The speller engine used is one of:
                   * pl - Polderland
                   * pk - Icelandic Púki
@@ -1595,7 +1504,6 @@ Usage: speller-testres.pl [OPTIONS]
                   * hu - Hunspell
                   * fo - foma-trie (output format = Hunspell)
                   * hf - Hfst-ospell
-                  * to - Hfst-ospell-office, by Tino Didriksen
                   * vk - Voikko
 
 --ccat            The input is from ccat, the default is typos.txt. Not yet in use.

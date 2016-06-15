@@ -42,7 +42,6 @@ fstfiles="*fst
 for f in $(find $1/ \
 			-not -iwholename '*.svn*' \
 			-not -iwholename '*build*' \
-			-not -iwholename '*bygg*' \
 			-not -iwholename '*.cache*' \
 			-not -iwholename '*hfst/3*' \
 			-not -iwholename '*hfst/MacVoikko*' \
@@ -53,12 +52,11 @@ for f in $(find $1/ \
 $fstfiles" $f
 done
 
-# Set the svn:ignore prop on the top level lang dir, ignoring build, bygg,
-# *.html and *.pc:
+# Set the svn:ignore prop on the top level lang dir, ignoring build, *.html
+# and *.pc:
 $svnignore "$autofiles
 $mkfiles
 build
-bygg
 *.html
 *.pc" $1
 
@@ -141,15 +139,10 @@ apertium.relabel" $1/tools/mt/apertium/tagsets
 $svnignore "$mkfiles
 abbr.txt" $1/tools/preprocess
 
-# Set the svn:ignore prop on the tools/spellcheckers/fstbased/desktop/ dir:
+# Set the svn:ignore prop on the tools/spellcheckers/fstbased/ dir:
 $svnignore "$mkfiles
 $fstfiles
-*.txt" $1/tools/spellcheckers/fstbased/desktop/
-
-# Set the svn:ignore prop on the tools/spellcheckers/fstbased/mobile/ dir:
-$svnignore "$mkfiles
-$fstfiles
-*.txt" $1/tools/spellcheckers/fstbased/mobile/
+*.txt" $1/tools/spellcheckers/fstbased
 
 # Set the svn:ignore prop on the hfst speller dir:
 $svnignore "$mkfiles
@@ -158,18 +151,16 @@ easteregg.*
 *.service
 *.zhfst
 *.oxt
-*.xpi
 spellercorpus.*
 test.*
 build
 unitweight
-editdist.default.regex
-3" $1/tools/spellcheckers/fstbased/desktop/hfst
+3" $1/tools/spellcheckers/fstbased/hfst
 
 # Set the svn:ignore prop on the tools/spellcheckers/fstbased/weighting/ dir:
 $svnignore "$mkfiles
 $fstfiles
-spellercorpus.clean.txt" $1/tools/spellcheckers/fstbased/desktop/weighting
+spellercorpus.clean.txt" $1/tools/spellcheckers/fstbased/weighting
 
 # Set the svn:ignore prop on the grammarchecker dir:
 $svnignore "$mkfiles
@@ -217,12 +208,12 @@ $svnignore "$mkfiles
 *.txt
 *.sh" $1/test/tools/spellcheckers
 
-# Set the svn:ignore prop on the test/tools/spellcheckers/fstbased/desktop/hfst dir:
+# Set the svn:ignore prop on the test/tools/spellcheckers/fstbased/hfst dir:
 $svnignore "$mkfiles
 *.log
 *.trs
 *.txt
-*.sh" $1/test/tools/spellcheckers/fstbased/desktop/hfst
+*.sh" $1/test/tools/spellcheckers/fstbased/hfst
 
 # Remove the svn:ignore prop on some subdirs:
 svn -q propdel svn:ignore $1/src/morphology/affixes

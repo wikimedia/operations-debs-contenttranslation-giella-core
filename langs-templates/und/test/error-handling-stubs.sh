@@ -16,8 +16,8 @@ if test "$Fail" -ge 1; then
     exit 1
 fi
 
-# Skip if no transducer were found - failing is problematic for lexc tests:
+# Fail if no transducer were found:
 if test "$transducer_found" = 0 ; then
-    echo "No transducer found"
-    exit 77
+    echo No transducer found
+    exit 1
 fi

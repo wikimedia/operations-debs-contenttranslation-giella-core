@@ -3,7 +3,15 @@
 ## Licence: GPL v3+
 
 # The current dir must be built after the filters, but before the rest.
-SUBDIRS = filters . desktop mobile
+SUBDIRS = weighting filters . hfst foma
+
+# Name of speller corpus sans suffix:
+CORPUSNAME=spellercorpus
+
+# Specify whether to use corpus weights for frequency ranking of suggestions.
+# Make sure you test the suggestion quality both before and after changing this
+# setting.
+ENABLE_CORPUS_WEIGHTS=no
 
 ### BEGIN: Local build rules: *.hfst: *.tmp.hfst ###
 

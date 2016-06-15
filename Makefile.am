@@ -31,7 +31,6 @@ nobase_dist_pkgdata_SCRIPTS = \
    scripts/edit-distance.bash \
    scripts/editdist.py \
    scripts/extract-abbr.pl \
-   scripts/Util.pm \
    scripts/extract-lemmas.sh \
    scripts/extract-tags.sh \
    scripts/extract-yaml-lemmas.sh \
@@ -45,7 +44,6 @@ nobase_dist_pkgdata_SCRIPTS = \
    scripts/iso-639-3_20140320.tab.txt \
    scripts/iso3-to-2.sh \
    scripts/iso639-to-name.sh \
-   scripts/iso-639-3.txt \
    scripts/keyboards/android-glyphs-api16.bin \
    scripts/keyboards/android-glyphs-api19.bin \
    scripts/keyboards/android-glyphs-api21.bin \
@@ -68,6 +66,7 @@ nobase_dist_pkgdata_SCRIPTS = \
    scripts/set-svn-ignores-prooftesting.sh \
    scripts/smx-smi.py \
    scripts/spell-preprocess.pl \
+   scripts/speller-testres.pl \
    scripts/style/speller_xml.css \
    scripts/taglist2make_optional_tags_regex.sh \
    scripts/taglist2remove_semantic_tags_regex.sh \
@@ -79,8 +78,5 @@ nobase_dist_pkgdata_SCRIPTS = \
    scripts/word_form_cohorts-to-table.pl \
    scripts/xsl/generate_lex-fileVM.xsl
 
-# This makes the package depend on perl-Text-Brew, so don't include it in dist
-# (still available through $GTCORE/scripts)
-#   scripts/speller-testres.pl
 
 # templates

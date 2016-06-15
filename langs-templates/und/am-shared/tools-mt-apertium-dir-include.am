@@ -103,8 +103,7 @@ hfstdatadir=$(datadir)/giella/$(GTLANG)
 noinst_DATA=$(APERTIUM_ANALYSER_HFST) \
 			$(APERTIUM_ANALYSERS_GT_HFST) \
 			$(APERTIUM_ANALYSERS_AP_HFST) \
-			$(APERTIUM_GENERATORS_HFST) \
-			$(APERTIUM_CG_SRC)
+			$(APERTIUM_GENERATORS_HFST)
 hfstdata_DATA=$(APERTIUM_MORPH_PAIRS) \
 			  $(APERTIUM_GENERATOR_ATTGZ) \
 			  $(APERTIUM_CG_BIN)
@@ -112,7 +111,6 @@ endif # CAN_HFST
 
 # Apertium generator - GTD tags. All filtering happens here except dialect tags happens here:
 generator-mt-gt-norm.tmp.hfst: $(top_builddir)/src/generator-raw-gt-desc.hfst \
-			$(top_builddir)/src/filters/make-optional-transitivity-tags.hfst  \
 			$(top_builddir)/src/filters/make-optional-semantic-tags.hfst      \
 			$(top_builddir)/src/filters/make-optional-v1-tags.hfst            \
 			$(top_builddir)/src/filters/remove-derivation-position-tags.hfst  \
@@ -131,7 +129,6 @@ generator-mt-gt-norm.tmp.hfst: $(top_builddir)/src/generator-raw-gt-desc.hfst \
 	$(AM_V_HXFST)$(PRINTF) "set xerox-composition ON \n\
 			read regex \
 		@\"$(top_builddir)/src/filters/make-optional-semantic-tags.hfst\"     \
-	.o. @\"$(top_builddir)/src/filters/make-optional-transitivity-tags.hfst\" \
 	.o. @\"$(top_builddir)/src/filters/make-optional-v1-tags.hfst\"           \
 	.o. @\"$(top_builddir)/src/filters/remove-derivation-position-tags.hfst\" \
 	.o. @\"$(top_builddir)/src/filters/remove-norm-comp-tags.hfst\"           \
@@ -363,18 +360,13 @@ functions-mt-gt.cg3: \
 				$(GTCORE)/giella-shared/smi/src/syntax/functions.cg3
 	$(AM_V_CP)cp -f $< $@
 
-%-mt-gt.cg3: $(top_srcdir)/src/syntax/%.cg3
+disambiguation-mt-gt.cg3: \
+				$(top_srcdir)/src/syntax/disambiguation.cg3
 	$(AM_V_CP)cp -f $< $@
-
-%.cg3: $(top_srcdir)/src/syntax/%.cg3
-	$(AM_V_CP)cp -f $< $@
-
-# Make sure included files are copied in before starting to compile:
-$(APERTIUM_CG_SRC): $(APERTIUM_CG_INCLUDE_SRC)
 
 # Change the tags from GTDivvun format to Apertium format:
 %-apertium.cg3: %-gt.cg3
-	$(AM_V_GEN)grep -v '#RemoveFromApertium' < $< > $@
+	<$< grep -v '#RemoveFromApertium' >$@
 
 #### Copy to Apertium filenames
 $(APERTIUM_MORPH_PAIRS_V): \

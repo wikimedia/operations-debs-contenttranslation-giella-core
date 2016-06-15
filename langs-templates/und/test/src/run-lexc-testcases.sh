@@ -65,7 +65,7 @@ for file in ${source_files}; do
 
 		for fst in $fsts; do
 		    (( i += 1 ))
-		    echo "Running $fst tests:"
+#		    echo "The fst is: $fst"    # debug
 			# Empty line before each new fst:
 			echo
 		    leadtext=$(echo "LEXC test $i: ")

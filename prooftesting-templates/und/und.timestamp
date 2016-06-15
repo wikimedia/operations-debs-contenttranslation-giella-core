@@ -1,26 +1,4 @@
-$Rev: 128696 $
-Change the order of testing, Hunspell last.
-
-r128694:
-Get real hfst-ospell-office version number from man file.
-
-r128657:
-No need to use a tmp file + tail - the comment lines are stripped by the script
-reading the data file.
-
-r128423:
-Use GTLANG2 instead of GTLANG - caused speller failures when testing SME.
-
-r128420:
-Remove the first line of the hfst-ospell-office output - it is just a signature
-indicating that the speller is working, and may trip off output data parsing.
-
-r128174:
-Added support for the new hfst-ospell-office speller made by Tino, and the
-library version of which is used in the MS Office speller. A number of other
-code changes to improve readability and reduce copy-paste.
-
-r102373:
+$Rev: 102373 $
 Moved gold standard test results for the new version of the test bench to a
 new directory, to not mix new and old test results. Made the filename of the
 test results more transparent and less idiosyncratic.
