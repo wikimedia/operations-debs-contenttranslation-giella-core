@@ -33,7 +33,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 # AM_INIT_AUTOMAKE sets up make conventions
 AM_INIT_AUTOMAKE(
-  1.11.6 tar-pax -Wall -Werror
+  1.11.6 -Wall -Werror
   foreign -Wno-portability
   dnl Automake versions before 1.13 (when the serial-tests option was
   dnl still the default) still defined the badly obsolete macro
@@ -48,7 +48,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 ### This is the version of the GTD core that we require. Update as needed.
 ### It is possible to specify also subversion revision: 0.1.2-12345
-_gtd_core_min_version=0.2.35
+_gtd_core_min_version=0.2.33
 
 ### Required version of the Hfst tools:
 _required_hfst_version=3.8.2
@@ -116,7 +116,7 @@ case "${host}" in
 esac
 AC_SUBST(CYGWINJAVAPATH)
 
-# Tests and sets up giella-core directories and scripts
+# Tests and sets up giellatekno directories and scripts
 gt_PROG_SCRIPTS_PATHS
 
 # Tests and sets up XFST
@@ -127,9 +127,6 @@ gt_PROG_FOMA
 
 # Tests and sets up HFST
 gt_PROG_HFST
-
-# Tests and sets up Voikko
-gt_PROG_VFST
 
 # Tests and sets up vislcg3
 gt_PROG_VISLCG3
@@ -166,9 +163,7 @@ AC_CONFIG_FILES([Makefile \
                  test/tools/mt/apertium/Makefile \
                  test/tools/spellcheckers/Makefile \
                  test/tools/spellcheckers/fstbased/Makefile \
-                 test/tools/spellcheckers/fstbased/desktop/Makefile \
-                 test/tools/spellcheckers/fstbased/desktop/hfst/Makefile \
-                 test/tools/spellcheckers/fstbased/mobile/Makefile \
+                 test/tools/spellcheckers/fstbased/hfst/Makefile \
                  test/src/Makefile \
                  test/src/morphology/Makefile \
                  test/src/orthography/Makefile \
@@ -185,14 +180,9 @@ AC_CONFIG_FILES([Makefile \
                  tools/spellcheckers/Makefile \
                  tools/spellcheckers/fstbased/Makefile \
                  tools/spellcheckers/fstbased/filters/Makefile \
-                 tools/spellcheckers/fstbased/desktop/Makefile \
-                 tools/spellcheckers/fstbased/desktop/weighting/Makefile \
-                 tools/spellcheckers/fstbased/desktop/foma/Makefile \
-                 tools/spellcheckers/fstbased/desktop/hfst/Makefile \
-                 tools/spellcheckers/fstbased/mobile/Makefile \
-                 tools/spellcheckers/fstbased/mobile/weighting/Makefile \
-                 tools/spellcheckers/fstbased/mobile/hfst/Makefile \
-                 tools/spellcheckers/fstbased/mobile/vfst/Makefile \
+                 tools/spellcheckers/fstbased/foma/Makefile \
+                 tools/spellcheckers/fstbased/hfst/Makefile \
+                 tools/spellcheckers/fstbased/weighting/Makefile \
                  tools/spellcheckers/listbased/Makefile \
                  tools/spellcheckers/listbased/filters/Makefile])
 # Add one AC_CONFIG_FILES for each script file that needs processing. This gives
@@ -200,12 +190,12 @@ AC_CONFIG_FILES([Makefile \
 # Spell checker tests, all languages:
 AC_CONFIG_FILES([test/tools/spellcheckers/test-zhfst-file.sh], \
       [chmod a+x test/tools/spellcheckers/test-zhfst-file.sh])
+AC_CONFIG_FILES([test/tools/spellcheckers/fstbased/hfst/test-zhfst-basic-sugg-speed.sh], \
+      [chmod a+x test/tools/spellcheckers/fstbased/hfst/test-zhfst-basic-sugg-speed.sh])
 AC_CONFIG_FILES([test/tools/spellcheckers/run-spellers-gt-norm-yaml-testcases.sh], \
       [chmod a+x test/tools/spellcheckers/run-spellers-gt-norm-yaml-testcases.sh])
-AC_CONFIG_FILES([test/tools/spellcheckers/fstbased/desktop/hfst/test-zhfst-basic-sugg-speed.sh], \
-      [chmod a+x test/tools/spellcheckers/fstbased/desktop/hfst/test-zhfst-basic-sugg-speed.sh])
-AC_CONFIG_FILES([test/tools/spellcheckers/fstbased/desktop/hfst/run-acceptor-yaml-testcases.sh], \
-      [chmod a+x test/tools/spellcheckers/fstbased/desktop/hfst/run-acceptor-yaml-testcases.sh])
+AC_CONFIG_FILES([test/tools/spellcheckers/fstbased/hfst/run-acceptor-yaml-testcases.sh], \
+      [chmod a+x test/tools/spellcheckers/fstbased/hfst/run-acceptor-yaml-testcases.sh])
 AC_CONFIG_FILES([test/src/run-gt-desc-genyaml-testcases.sh], \
       [chmod a+x test/src/run-gt-desc-genyaml-testcases.sh])
 AC_CONFIG_FILES([test/src/run-gt-desc-anayaml-testcases.sh], \

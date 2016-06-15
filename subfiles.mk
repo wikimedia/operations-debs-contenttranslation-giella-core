@@ -52,7 +52,6 @@ subdir_files = \
    giella-shared/common/src/filters/remove-transitivity-tags.regex \
    giella-shared/common/src/filters/remove-usage-tags.regex \
    giella-shared/common/src/filters/remove-usage_except_NGminip-tags.regex \
-   giella-shared/common/src/filters/remove-usage_except_speller-tags.regex \
    giella-shared/common/src/filters/remove-use_marg-strings.regex \
    giella-shared/common/src/filters/remove-variant-strings.regex \
    giella-shared/common/src/filters/remove-variant-tags.regex \
@@ -60,6 +59,8 @@ subdir_files = \
    giella-shared/common/src/filters/reorder-subpos-tags.regex \
    giella-shared/common/src/filters/split-CmpNP-tags.regex \
    giella-shared/common/src/filters/tag-lowercase_error-strings.regex \
+   giella-shared/common/tools/spellcheckers/fstbased/filters/convert_to_flags-CmpN-tags.regex \
+   giella-shared/common/tools/spellcheckers/fstbased/filters/split-CmpN-tags.regex \
    giella-shared/common/tools/spellcheckers/listbased/filters/extract-RCmpnd-strings.regex \
    giella-shared/smi/src/morphology/stems/smi-propernouns.lexc \
    giella-shared/smi/src/morphology/stems/webadresses.lexc \

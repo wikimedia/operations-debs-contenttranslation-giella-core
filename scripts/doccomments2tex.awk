@@ -8,6 +8,6 @@ BEGIN {
 /^!! \$/ {
     printf("$^\\star$%s", $3);
 }
-/^!! [^$€]/ {print(gensub("!! ?", "", 1)); }
+/^!! [^$€]/ {print(gensub("!! ?", "", "")); }
 /^LEXICON / {printf("\n\\%s{%s}: ", LEXICONLEVEL, $2);
 }

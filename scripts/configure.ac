@@ -14,8 +14,8 @@
 
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
-AC_INIT([gtlang-scripts], [0.2.35], [bugs@divvun.no], [gtlang-scripts], [http://divvun.no])
-AC_REVISION([$Revision: 123036 $])
+AC_INIT([gtlang-scripts], [0.2.34], [bugs@divvun.no], [gtlang-scripts], [http://divvun.no])
+AC_REVISION([$Revision: 118934 $])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
@@ -25,10 +25,10 @@ AS_IF([test "x$GTCORE"  = x], [GTCORE=$(dirname $(pwd) ); AC_MSG_RESULT([yes - f
       [AC_MSG_RESULT([no])])
 AC_ARG_VAR([GTCORE], [directory for Giellatekno/Divvun core data and scripts])
 
-SVNREVISION="$Revision: 123036 $"
+SVNREVISION="$Revision: 118934 $"
 SVNREVNUM=$(echo ${SVNREVISION} | cut -d' ' -f2)
 
-AC_SUBST([GT_SCRIPTVERSION], [0.2.35-${SVNREVNUM}])
+AC_SUBST([GT_SCRIPTVERSION], [0.2.34-${SVNREVNUM}])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([gt-version.sh], [chmod +x gt-version.sh])

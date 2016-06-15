@@ -3,7 +3,7 @@
 ## Licence: GPL v3+
 
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = . hfst-mso plx voikko puki foma-trie hunspell
+SUBDIRS = . hunspell foma-trie plx puki voikko
 
 EXTRA_DIST = und.timestamp
 

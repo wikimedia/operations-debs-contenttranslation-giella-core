@@ -1,5 +1,4 @@
-# gt.m4 - Macros to locate and utilise giella-core scripts and required tools
-# for the Divvun and Giellatekno infrastructure. -*- Autoconf -*-
+# gt.m4 - Macros to locate and utilise giellatekno scripts -*- Autoconf -*-
 # serial 1 (gtsvn-1)
 # 
 # Copyright © 2011 Divvun/Samediggi/UiT <bugs@divvun.no>.
@@ -198,35 +197,6 @@ AM_CONDITIONAL([CAN_XFST], [test "x$gt_prog_xfst" != xno])
 ]) # gt_PROG_XFST
 
 ################################################################################
-# Define functions for checking the availability of Voikko tools:
-################################################################################
-AC_DEFUN([gt_PROG_VFST],
-[AC_ARG_WITH([voikko],
-            [AS_HELP_STRING([--with-voikko=DIRECTORY],
-                            [search voikko in DIRECTORY @<:@default=PATH@:>@])],
-            [with_voikko=$withval],
-            [with_voikko=yes])
-AC_PATH_PROG([VOIKKOSPELL],     [voikkospell],     [false],
-                                            [$PATH$PATH_SEPARATOR$with_voikko])
-AC_PATH_PROG([VOIKKOHYPHENATE], [voikkohyphenate], [false],
-                                            [$PATH$PATH_SEPARATOR$with_voikko])
-AC_PATH_PROG([VOIKKOGC],        [voikkogc],        [false],
-                                            [$PATH$PATH_SEPARATOR$with_voikko])
-AC_PATH_PROG([VOIKKOVFSTC],     [voikkovfstc],     [false],
-                                            [$PATH$PATH_SEPARATOR$with_voikko])
-AC_MSG_CHECKING([whether to enable voikko building])
-AS_IF([test x$with_voikko != xno], [
-    AS_IF([test "x$VOIKKOSPELL"      != xfalse -a \
-                "x$VOIKKOHYPHENATE"  != xfalse -a \
-                "x$VOIKKOGC"         != xfalse -a \
-                "x$VOIKKOVFSTC"      != xfalse  ], [gt_prog_voikko=yes],
-          [gt_prog_voikko=no])
-], [gt_prog_voikko=no])
-AC_MSG_RESULT([$gt_prog_voikko])
-AM_CONDITIONAL([CAN_VFST], [test "x$gt_prog_voikko" != xno])
-]) # gt_PROG_VFST
-
-################################################################################
 # Define functions for checking the availability of the Foma tools:
 ################################################################################
 AC_DEFUN([gt_PROG_FOMA],
@@ -252,7 +222,6 @@ AS_IF([test x$with_foma != xno], [
 ], [gt_prog_foma=no])
 AC_MSG_RESULT([$gt_prog_foma])
 AM_CONDITIONAL([CAN_FOMA], [test "x$gt_prog_foma" != xno])
-AM_CONDITIONAL([HAS_FOMA], [test "x$FOMA" != xfalse ])
 ]) # gt_PROG_FOMA
 
 ################################################################################
@@ -296,18 +265,16 @@ AC_DEFUN([gt_PROG_SAXON],
              [with_saxon=check])
 AC_PATH_PROG([SAXON], [saxonb-xslt saxon9 saxon8 saxon], [false], [$PATH$PATH_SEPARATOR$with_saxon])
 AC_PATH_PROG([JV], [java], [false])
-AC_CHECK_FILE([$HOME/lib/saxon9he.jar],
-    AC_SUBST(SAXONJAR, [$HOME/lib/saxon9he.jar]),
-    [AC_CHECK_FILE([$HOME/lib/saxon9.jar],
-        AC_SUBST(SAXONJAR, [$HOME/lib/saxon9.jar]),
-        [AC_CHECK_FILE([/opt/local/share/java/saxon9he.jar],
-            AC_SUBST(SAXONJAR, [/opt/local/share/java/saxon9he.jar]),
-            [AC_CHECK_FILE([/usr/share/java/Saxon-HE.jar],
-                AC_SUBST(SAXONJAR, [/usr/share/java/Saxon-HE.jar]),
-                [AC_CHECK_FILE([/usr/share/java/saxon.jar],
-                AC_SUBST(SAXONJAR, [/usr/share/java/saxon.jar]),
+AC_CHECK_FILE([/opt/local/share/java/saxon9he.jar],
+    AC_SUBST(SAXONJAR, [/opt/local/share/java/saxon9he.jar]),
+        [AC_CHECK_FILE([/usr/share/java/saxon.jar],
+            AC_SUBST(SAXONJAR, [/usr/share/java/saxon.jar]),
+            [AC_CHECK_FILE([$HOME/lib/saxon9he.jar],
+                AC_SUBST(SAXONJAR, [$HOME/lib/saxon9he.jar]),
+                    [AC_CHECK_FILE([$HOME/lib/saxon9.jar],
+                        AC_SUBST(SAXONJAR, [$HOME/lib/saxon9.jar]),
                     [_saxonjar=no])
-                    ])])])]
+                    ])])]
 )
 AS_IF([test "x$_saxonjar" != xno], [
 _saxon_min_version="8.0"
@@ -340,11 +307,8 @@ AM_CONDITIONAL([CAN_JAVA], [test "x$gt_prog_java" != xno -a "x$_saxonjar" != xno
 AC_DEFUN([gt_ENABLE_TARGETS],
 [
 # Foma-speller requires gzip, Voikko requires zip:
-AC_PATH_PROG([ZIP],  [zip],      [false], [$PATH$PATH_SEPARATOR$with_zip])
-AC_PATH_PROG([GZIP], [gzip],     [false], [$PATH$PATH_SEPARATOR$with_gzip])
-AC_PATH_PROGS([TAR], [tar gtar], [false], [$PATH$PATH_SEPARATOR$with_tar])
-AC_PATH_PROG([XZ],   [xz],       [false], [$PATH$PATH_SEPARATOR$with_xz])
-AM_CONDITIONAL([CAN_XZ], [test "x$ac_cv_prog_XZ" != xfalse])
+AC_PATH_PROG([ZIP],  [zip],  [false], [$PATH$PATH_SEPARATOR$with_zip])
+AC_PATH_PROG([GZIP], [gzip], [false], [$PATH$PATH_SEPARATOR$with_gzip])
 
 # Enable hyperminimisation of the lexical transducer - default is 'no'
 AC_ARG_ENABLE([hyperminimisation],
@@ -353,14 +317,6 @@ AC_ARG_ENABLE([hyperminimisation],
               [enable_hyperminimisation=$enableval],
               [enable_hyperminimisation=no])
 AM_CONDITIONAL([WANT_HYPERMINIMISATION], [test "x$enable_hyperminimisation" != xno])
-
-# Enable symbol alignment of the lexical transducer - default is 'no'
-AC_ARG_ENABLE([alignment],
-              [AS_HELP_STRING([--enable-alignment],
-                              [enable symbol alignment when parsing lexc @<:@default=no@:>@])],
-              [enable_alignment=$enableval],
-              [enable_alignment=no])
-AM_CONDITIONAL([WANT_LEXC_ALIGNMENT], [test "x$enable_alignment" != xno])
 
 #enable_twostep_intersect
 AC_ARG_ENABLE([twostep-intersect],
@@ -402,7 +358,7 @@ AC_ARG_ENABLE([syntax],
               [enable_syntax=yes])
 AS_IF([test "x$enable_syntax" = "xyes" -a "x$gt_prog_vislcg3" = "xno"],
              [enable_syntax=no
-              AC_MSG_ERROR([vislcg3 tools missing or too old, please install or disable syntax tools!])])
+              AC_MSG_WARN([vislcg3 tools missing or too old, syntax tools disabled!])])
 AM_CONDITIONAL([WANT_SYNTAX], [test "x$enable_syntax" != xno])
 # $gt_prog_vislcg3
 
@@ -414,17 +370,14 @@ AC_ARG_ENABLE([spellers],
               [enable_spellers=no])
 AM_CONDITIONAL([WANT_SPELLERS], [test "x$enable_spellers" != xno])
 
-# Enable hfst desktop spellers - default is 'yes' (but dependent on --enable-spellers)
-AC_ARG_ENABLE([hfst-dekstop-speller],
-              [AS_HELP_STRING([--enable-hfst-dekstop-speller],
-                              [build hfst desktop spellers (dependent on --enable-spellers) @<:@default=yes@:>@])],
-              [enable_desktop_hfstspeller=$enableval],
-              [enable_desktop_hfstspeller=yes])
-AS_IF([test "x$enable_spellers" = xno -o "x$gt_prog_hfst" = xno], [enable_desktop_hfstspeller=no],
-      [AS_IF([test "x$ZIP" = "xfalse"],
-             [enable_desktop_hfstspeller=no
-              AC_MSG_ERROR([zip missing - required for desktop zhfst spellers])])])
-AM_CONDITIONAL([WANT_HFST_DESKTOP_SPELLER], [test "x$enable_desktop_hfstspeller" != xno])
+# Enable hfst speller transducers - default is 'yes'
+AC_ARG_ENABLE([hfstspeller],
+              [AS_HELP_STRING([--enable-hfstspeller],
+                              [build speller hfst (dependent on --enable-spellers) @<:@default=yes@:>@])],
+              [enable_hfstspeller=$enableval],
+              [enable_hfstspeller=yes])
+AS_IF([test "x$enable_spellers" = xno -o "x$gt_prog_hfst" = xno], [enable_hfstspeller=no])
+AM_CONDITIONAL([WANT_SPELLERAUTOMAT], [test "x$enable_hfstspeller" != xno])
 
 # Enable minimised fst-spellers by default:
 AC_ARG_ENABLE([minimised-spellers],
@@ -433,12 +386,23 @@ AC_ARG_ENABLE([minimised-spellers],
               [enable_minimised_spellers=$enableval],
               [enable_minimised_spellers=yes])
 AS_IF([test "x$enable_minimised_spellers" != "xyes"],
+      [AC_SUBST([HFST_MINIMIZE_SPELLER], $ac_cv_path_HFST_REMOVE_EPSILONS)],
       [AC_SUBST([HFST_MINIMIZE_SPELLER], ["$ac_cv_path_HFST_REMOVE_EPSILONS \$(HFST_FLAGS) \
-                                         | $ac_cv_path_HFST_PUSH_WEIGHTS -p initial \$(HFST_FLAGS) "])],
-      [AC_SUBST([HFST_MINIMIZE_SPELLER], ["$ac_cv_path_HFST_REMOVE_EPSILONS \$(HFST_FLAGS) \
-                                         | $ac_cv_path_HFST_PUSH_WEIGHTS -p initial \$(HFST_FLAGS) \
+                                         | $ac_cv_path_HFST_PUSH_WEIGHTS -p final \$(HFST_FLAGS) \
                                          | $ac_cv_path_HFST_DETERMINIZE --encode-weights \$(HFST_FLAGS) \
                                          | $ac_cv_path_HFST_MINIMIZE    --encode-weights "])])
+
+# Enable voikko - default is 'yes', but only if the speller automate is enabled
+AC_ARG_ENABLE([voikko],
+              [AS_HELP_STRING([--enable-voikko],
+                              [build voikko speller (dependent on --enable-hfstspeller) @<:@default=yes@:>@])],
+              [enable_voikko=$enableval],
+              [enable_voikko=yes])
+AS_IF([test "x$enable_hfstspeller" = xno], [enable_voikko=no], 
+      [AS_IF([test "x$enable_hfstspeller" = xyes -a "x$ZIP" = "xfalse"],
+             [enable_voikko=no
+              AC_MSG_WARN([zip missing, voikko spellers disabled])])])
+AM_CONDITIONAL([WANT_VOIKKO], [test "x$enable_voikko" != xno ])
 
 # Enable Foma-based spellers, requires gzip - default is no
 AC_ARG_ENABLE([fomaspeller],
@@ -449,30 +413,8 @@ AC_ARG_ENABLE([fomaspeller],
 AS_IF([test "x$enable_fomaspeller" = "xyes" -a "x$gt_prog_hfst" != xno], 
       [AS_IF([test "x$GZIP" = "xfalse"],
              [enable_fomaspeller=no
-              AC_MSG_ERROR([gzip missing - required for foma spellers])])])
+              AC_MSG_WARN([gzip missing, foma spellers disabled])])])
 AM_CONDITIONAL([CAN_FOMA_SPELLER], [test "x$enable_fomaspeller" != xno])
-
-# Enable hfst mobile spellers - default is 'yes' (but dependent on --enable-spellers)
-AC_ARG_ENABLE([hfst-mobile-speller],
-              [AS_HELP_STRING([--enable-hfst-mobile-speller],
-                              [build hfst mobile spellers (dependent on --enable-spellers) @<:@default=yes@:>@])],
-              [enable_mobile_hfstspeller=$enableval],
-              [enable_mobile_hfstspeller=yes])
-AS_IF([test "x$enable_spellers" = xno -o "x$gt_prog_hfst" = xno], [enable_mobile_hfstspeller=no],
-      [AS_IF([test "x$XZ" = "xfalse"],
-             [enable_mobile_hfstspeller=no
-              AC_MSG_ERROR([xz is missing - required for mobile zhfst spellers])])])
-AM_CONDITIONAL([WANT_HFST_MOBILE_SPELLER], [test "x$enable_mobile_hfstspeller" != xno])
-
-# Enable Vfst-based spellers - default is no
-AC_ARG_ENABLE([vfstspeller],
-              [AS_HELP_STRING([--enable-vfstspeller],
-                              [build vfst speller (dependent on --enable-hfst-mobile-speller) @<:@default=no@:>@])],
-              [enable_vfstspeller=$enableval],
-              [enable_vfstspeller=no])
-AS_IF([test "x$enable_vfstspeller" = "xyes" -a "x$enable_mobile_hfstspeller" = xno],
-              [enable_vfstspeller=no])
-AM_CONDITIONAL([WANT_VFST_SPELLER], [test "x$enable_vfstspeller" != xno])
 
 # Disable Hunspell production by default:
 AC_ARG_ENABLE([hunspell],
@@ -499,7 +441,7 @@ AC_ARG_ENABLE([grammarchecker],
               [enable_grammarchecker=no])
 AS_IF([test "x$enable_grammarchecker" = "xyes" -a "x$gt_prog_vislcg3" = "xno"], 
       [enable_grammarchecker=no
-       AC_MSG_ERROR([vislcg3 missing or too old - required for the grammar checker])])
+       AC_MSG_WARN([vislcg3 missing or too old, grammar checker disabled])])
 AM_CONDITIONAL([WANT_GRAMCHECK], [test "x$enable_grammarchecker" != xno])
 
 # Enable dictionary transducers - default is 'no'
@@ -568,8 +510,6 @@ AS_IF([test x$enable_abbr != xno -a \
     "$(find ${srcdir}/src/morphology/stems/ -name "abbreviations.lexc" | head -n 1)" = "" ],
     [AC_MSG_ERROR([You asked for abbr.txt generation, but have no file \
 src/morphology/stems/abbreviations.lexc])])
-AS_IF([test x$enable_abbr == xyes -a x$enable_generators == xno],
-    [AC_MSG_ERROR([You need to enable generators to build the abbr file])])
 AM_CONDITIONAL([WANT_ABBR], [test "x$enable_abbr" != xno])
 
 ]) # gt_ENABLE_TARGETS
@@ -599,12 +539,10 @@ cat<<EOF
 
   -- proofing tools (off by default): --
   * spellers enabled: $enable_spellers
-    * desktop spellers:
-      * hfst speller enabled: $enable_desktop_hfstspeller
-      * foma speller enabled: $enable_fomaspeller
-    * mobile spellers:
-      * hfst speller enabled: $enable_mobile_hfstspeller
-      * vfst speller enabled: $enable_vfstspeller
+    * hfst speller fst's enabled: $enable_hfstspeller
+    * foma speller enabled: $enable_fomaspeller
+    * hunspell generation enabled: $enable_hunspell
+  * fst hyphenator enabled: $enable_fst_hyphenator
   * grammar checker enabled: $enable_grammarchecker
 
   -- specialised fst's (off by default): --

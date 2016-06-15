@@ -65,8 +65,7 @@ AC_CONFIG_FILES([Makefile           \
                  foma-trie/Makefile \
                  plx/Makefile       \
                  puki/Makefile      \
-                 voikko/Makefile    \
-                 hfst-mso/Makefile])
+                 voikko/Makefile])
 
 # This must be near the end of all configure.ac files:
 AC_OUTPUT

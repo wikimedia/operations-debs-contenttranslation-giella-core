@@ -15,26 +15,19 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-GT_SPELLER_HFST=../generator-desktopspeller-gt-norm.hfst
+GT_SPELLER_HFST=../generator-fstspeller-gt-norm.hfst
 GT_SPELLER_ACCEPTOR=acceptor.default.hfst
 
-# Max compression for zipped files:
+# This is how we zip files to work with hfst-ospell and libvoikko
+# (=max compression, working from 28.1.2014 for all platforms):
 ZIPFLAGS=-9 $(VERBOSITY)
-
-### SNM 25.1.2015: Commented out xz compression, it isn't supported by libvoikko
-## Use xz for zhfst compression if possible, otherwise fall back to zip:
-#if CAN_XZ
-#ZHFST_COMPRESSION=$(TAR) -c * | $(XZ) > ../../$@
-#else
-ZHFST_COMPRESSION=$(ZIP) $(ZIPFLAGS) ../../$@ *
-#endif # CAN_XZ
 
 ## Conditional string variables;
 # Set file name to the empty string or initial_letters_all depending on variable:
 initial_letter_deps=$(shell \
 	if [[ $(ALLOW_INITIAL_EDITS) == 'yes' ]] ; \
 	then \
-		echo "initial_letters_all.%.hfst"; \
+		echo "initial_letters.%.hfst"; \
 	else \
 		echo ""; \
 	fi)
@@ -43,7 +36,7 @@ initial_letter_deps=$(shell \
 initial_letter_fst_include=$(shell \
 	if [[ $(ALLOW_INITIAL_EDITS) == 'yes' ]] ; \
 	then \
-		echo "( @\\\"initial_letters_all.$*.hfst\\\" )"; \
+		echo "| @\\\"initial_letters.$*.hfst\\\" "; \
 	else \
 		echo ""; \
 	fi)
@@ -56,19 +49,25 @@ if CAN_HFST
 #GT_ERRMODELS+=errmodel.edit-distance-1.hfst
 
 # Only build speller if it is enabled (default=yes)
-if WANT_HFST_DESKTOP_SPELLER
+if WANT_SPELLERAUTOMAT
 GT_ERRMODELS+=errmodel.default.hfst
 # libvoikko can't yet handle multiple error models - do NOT include this line:
 # errmodel.ocr.hfst
 
+# Require zip to turn on zhfst target:
+if WANT_VOIKKO
 GT_SPELLING_HFST=$(GTLANG2).zhfst
+endif # WANT_VOIKKO
+endif # WANT_SPELLERAUTOMAT
+endif # CAN_HFST
 
+if CAN_HFST
+if WANT_VOIKKO
 voikkosharedir=$(libdir)/voikko/3/
 #! @param GT_VOIKKO optional, set to spell checker automata names if
 #!					installable
 voikkoshare_DATA=$(GT_SPELLING_HFST) $(ALT_WS_ZHFST_FILES)
-
-endif # WANT_HFST_DESKTOP_SPELLER
+endif # WANT_VOIKKO
 endif # CAN_HFST
 endif # WANT_SPELLERS
 
@@ -76,7 +75,6 @@ noinst_DATA=$(GT_ERRMODELS) \
 			$(OXT_FILES) \
 			$(ALT_WS_OXT_FILES) \
 			$(MACVOIKKOFILE) \
-			$(MACVOIKKOZIPFILE) \
 			$(MACVKOFST) \
 			$(MOZVOIKKO_FILE)
 
@@ -125,15 +123,17 @@ initial_letters.regex.%.hfst: initial_letters.%.regex
 	$(AM_V_RGX2FST)$(HFST_REGEXP2FST) -S $(HFST_FLAGS) -i $<\
 		-o $@
 
-initial_letters_all.%.hfst: \
+initial_letters.%.hfst: \
 			initial_letters.regex.%.hfst \
 			initial_letters.list.%.hfst
 	$(AM_V_UNION)$(HFST_DISJUNCT) $^     \
+		| $(HFST_MINIMIZE) $(HFST_FLAGS) \
 		-o $@
 
 final_strings.list.%.hfst: final_strings.%.txt
 	$(AM_V_STR2FST)grep -v '^#' $< | grep -v '^$$' \
 		| $(HFST_STRINGS2FST) $(HFST_FLAGS) -j \
+		| $(HFST_MINIMIZE) $(HFST_FLAGS) \
 		-o $@
 
 final_strings.regex.%.hfst: final_strings.%.regex
@@ -144,6 +144,7 @@ final_strings_all.%.hfst: \
 		final_strings.regex.%.hfst \
 		final_strings.list.%.hfst
 	$(AM_V_UNION)$(HFST_DISJUNCT) $^     \
+		| $(HFST_MINIMIZE) $(HFST_FLAGS) \
 		-o $@
 
 # Helper fst:
@@ -162,6 +163,7 @@ strings.%.hfst: strings.%.txt anystar.hfst
 editStrings.%.hfst: strings.%.hfst editdist.%.hfst
 	$(AM_V_UNION)$(HFST_DISJUNCT) $^     \
 		| $(HFST_REPEAT) -f 1 -t $(DEFAULT_EDIT_DIST) \
+		| $(HFST_MINIMIZE) $(HFST_FLAGS) \
 		-o $@
 
 # Error model building - list of words known to be misspelled:
@@ -178,12 +180,14 @@ errmodel.%.hfst: words.%.hfst \
 		[ @\"words.$*.hfst\"    \
 		| \
 		  [ \
-		      $(initial_letter_fst_include) \
-		      @\"editStrings.$*.hfst\"  \
+		    [ ? \
+			$(initial_letter_fst_include) \
+		    ] \
+		      @\"editStrings.$*.hfst\"   \
 		    ( @\"final_strings_all.$*.hfst\" ) \
 		  ] \
 		];" \
-		| $(HFST_REGEXP2FST) -S -E $(HFST_FLAGS) \
+		| $(HFST_REGEXP2FST) -S $(HFST_FLAGS) \
 		| $(HFST_FST2FST) $(HFST_FLAGS) -f olw -o $@
 
 ####### Alternate error model: #######
@@ -208,16 +212,10 @@ acceptor.%.hfst: $(GT_SPELLER_HFST) easteregg.%.hfst
 ####### *.zhfst file: #######
 # Finally build the zhfst file, and make a copy in a subdir named '3', so that
 # we can test it without installing it (the '3' dir is a voikko requirement):
-$(GT_SPELLING_HFST): $(srcdir)/index.xml \
+$(GT_SPELLING_HFST): index.xml \
 					 $(GT_ERRMODELS) \
 					 $(GT_SPELLER_ACCEPTOR)
-	$(AM_V_at)rm -f $@
-	$(AM_V_at)$(MKDIR_P) build/$@
-	$(AM_V_at)rm -f build/$@/*
-	$(AM_V_at)cp $(srcdir)/index.xml build/$@/index.xml
-	$(AM_V_at)cp $(GT_SPELLER_ACCEPTOR) build/$@/$(GT_SPELLER_ACCEPTOR)
-	$(AM_V_at)cp $(GT_ERRMODELS) build/$@/$(GT_ERRMODELS)
-	$(AM_V_GEN)cd build/$@/ && $(ZHFST_COMPRESSION)
+	$(AM_V_GEN)rm -f $@ && $(ZIP) $(ZIPFLAGS) -j $@ $^
 	$(AM_V_at)$(MKDIR_P) 3
 	$(AM_V_at)cp -f $@ 3/
 
@@ -240,8 +238,8 @@ clean-local:
             initial_letters_all.default.hfst \
             final_strings.default.hfst
 
-include $(top_srcdir)/am-shared/tools-spellcheckers-fstbased-desktop-hfst_prods_n_upload-dir-include.am
-include $(top_srcdir)/am-shared/tools-spellcheckers-fstbased-desktop-hfst_alt_ws-dir-include.am
+include $(top_srcdir)/am-shared/tools-spellcheckers-fstbased-hfst_prods_n_upload-dir-include.am
+include $(top_srcdir)/am-shared/tools-spellcheckers-fstbased-hfst_alt_ws-dir-include.am
 include $(top_srcdir)/am-shared/regex-include.am
 include $(top_srcdir)/am-shared/silent_build-include.am
 

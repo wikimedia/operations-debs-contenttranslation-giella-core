@@ -9,16 +9,8 @@ spelltestresult, header {
 
 /* Header and summary styling: */
 header engine::before {
+    content: 'Engine: ' open-quote attr(abbreviation) close-quote ;
     display: block ;
-    font-weight: bold ;
-}
-
-header engine[abbreviation="to"]::before {
-    content: 'Engine: ' open-quote 'hfst-ospell-office' close-quote ;
-}
-
-header engine[abbreviation="vk"]::before {
-    content: 'Engine: ' open-quote 'voikkospell' close-quote ;
 }
 
 engine processing {
@@ -27,23 +19,9 @@ engine processing {
 engine processing::after {
     display: inline-block ;
     content: 'Words/second: ' attr(words_per_sec) ;
-    font-weight: bold ;
 }
 
 toolversion { display: none ;}
-
-lexicon::before {
-    content: 'Speller lexicon version: ' ;
-    display: inline-block ;
-}
-lexicon {
-    display: block ;
-}
-lexicon::after {
-    display: inline-block ;
-    content: attr(version) ;
-    font-weight: bold ;
-}
 
 document::before {
     content: 'Document: ' ;
@@ -56,11 +34,9 @@ document {
 timestamp::before {
     content: 'Test date and time: ' ;
     display: inline-block ;
-    font-weight: normal ;
 }
 timestamp {
     display: block ;
-    font-weight: bold ;
 }
 
 truefalsesummary::before {
@@ -87,22 +63,16 @@ truefalsesummary positive::before {
 truefalsesummary positive::after {
     content: 'False positives: ' attr(false) ;
     display: block ;
-    background-color: #3670FF ;
-    border: 2px ridge #3670FF ;
 }
 
 truefalsesummary negative::before {
     content: 'True negatives: ' attr(true) ;
     display: block ;
-    background-color: green ;
-    border: 2px ridge green ;
 }
 
 truefalsesummary negative::after {
     content: 'False negatives: ' attr(false) ;
     display: block ;
-    background-color: #D800DD ;
-    border: 2px ridge #D800DD ;
 }
 
 precision::before {
@@ -313,29 +283,11 @@ word[corrsugg="-1"] {
     background-color: rgb(255, 60, 0) ;
 }
 
-word[corrsugg="goodaccept"] {
-    background-color: green ;
-}
-word[corrsugg="goodaccept"] original {
-    border: 2px ridge green ;
-    border-collapse: separate ;
-    border-spacing: 2px ;
+speller[status=correct] + expected {
+    background-color: red ;
 }
 
-word[corrsugg="badaccept"] {
-    background-color: #D800DD ;
-}
-word[corrsugg="badaccept"] original {
-    border: 2px ridge #D800DD ;
-    border-collapse: separate ;
-    border-spacing: 2px ;
-}
-
-word[corrsugg="falsealarm"] {
-    background-color: #3670FF ;
-}
-
-results original, expected, edit_dist, suggestions, errors, origfile {
+results original, expected, edit_dist, suggestions {
     display: table-cell;
     padding: 0.2em;
 }
@@ -344,15 +296,11 @@ results speller, position {
     display: none;
 }
 
-suggestion, error {
+suggestion {
     display: list-item ;
     margin-left: 2em ;
 }
 
 suggestion[expected] {
     background-color: lime ;
-}
-
-error::after {
-    content: ' (' attr(type) ')' ;
 }
