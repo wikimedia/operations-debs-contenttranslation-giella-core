@@ -1,0 +1,18 @@
+giella-core (0.1.1~r129227+svn121148-1+wmf1) jessie; urgency=low
+
+  * Rebuilt for Jessie.
+
+ -- Kartik Mistry <kartik@debian.org>  Wed, 15 Jun 2016 10:25:23 +0530
+
+giella-core (0.1.1~r129227+svn121148-1) unstable; urgency=low
+
+  * Old upstream release - downgrading to the version giella-sme needs
+
+ -- Tino Didriksen <tino@didriksen.cc>  Thu, 03 Mar 2016 08:45:22 +0000
+
+giella-core (0.1.1~r129227-1) unstable; urgency=low
+
+  [ Tino Didriksen ]
+  * Initial release (Closes: #814398)
+
+ -- Kartik Mistry <kartik@debian.org>  Thu, 11 Feb 2016 13:57:29 +0530
